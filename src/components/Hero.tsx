@@ -11,29 +11,34 @@ export default function Hero() {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      // Start video playing muted (guaranteed by browsers)
-      video.muted = true;
+    if (!video) return;
+
+    let attemptedUnmute = false;
+
+    const handlePlaying = () => {
+      if (attemptedUnmute) return;
+      attemptedUnmute = true;
+
+      // Attempt to unmute the video
+      video.muted = false;
       video.play()
         .then(() => {
-          // Once playing, attempt to unmute
-          video.muted = false;
-          video.play()
-            .then(() => {
-              // Successfully unmuted
-              setMuted(false);
-            })
-            .catch((err) => {
-              console.log("Unmuted autoplay blocked by browser, keeping muted:", err);
-              if (videoRef.current) {
-                videoRef.current.muted = true;
-                setMuted(true);
-              }
-            });
+          setMuted(false);
         })
         .catch((error) => {
-          console.error("Autoplay failed:", error);
+          console.log("Unmuted autoplay blocked, staying muted:", error);
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            setMuted(true);
+          }
         });
+    };
+
+    video.addEventListener("playing", handlePlaying);
+
+    // If the video is already playing by the time useEffect runs
+    if (!video.paused) {
+      handlePlaying();
     }
 
     // Intersection observer to automatically mute when out of view and unmute when entering view
@@ -49,8 +54,18 @@ export default function Hero() {
             videoRef.current.muted = true;
             setMuted(true);
           } else {
+            // Scroll back in: try to unmute
             videoRef.current.muted = false;
-            setMuted(false);
+            videoRef.current.play()
+              .then(() => {
+                setMuted(false);
+              })
+              .catch(() => {
+                if (videoRef.current) {
+                  videoRef.current.muted = true;
+                  setMuted(true);
+                }
+              });
           }
         }
       },
@@ -66,6 +81,7 @@ export default function Hero() {
     }
 
     return () => {
+      video.removeEventListener("playing", handlePlaying);
       if (heroSection) {
         observer.unobserve(heroSection);
       }
