@@ -1,26 +1,168 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050816;
+  --surface: #0F172A;
+  --primary: #3B82F6;
+  --accent: #06B6D4;
+  --text: #FFFFFF;
+  --secondary: #94A3B8;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-glow: rgba(6, 182, 212, 0.2);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-background: #050816;
+  --color-surface: #0F172A;
+  --color-primary: #3B82F6;
+  --color-accent: #06B6D4;
+  --color-text-main: #FFFFFF;
+  --color-secondary: #94A3B8;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-glow: rgba(6, 182, 212, 0.2);
+
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-mono: var(--font-space-mono), monospace;
+  --font-display: var(--font-syne), sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Reset & Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  /* CRITICAL GLOBAL RULE: Never add shadow */
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+body, h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, figcaption, blockquote, dl, dd {
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom wiggle-float animations for projects */
+@keyframes wiggle-float {
+  0%, 100% {
+    transform: translateY(0) rotate(var(--base-rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-12px) rotate(calc(var(--base-rotate, 0deg) + 2.5deg));
   }
 }
 
+.wiggle-card {
+  animation: wiggle-float 6s ease-in-out infinite;
+}
+
+html {
+  background-color: var(--background);
+  color: var(--text);
+  scroll-behavior: auto;
+  /* Managed by Lenis */
+  overflow-x: hidden;
+}
+
 body {
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom selection */
+::selection {
+  background-color: var(--accent);
+  color: var(--background);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Outlined Text Utility */
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+}
+
+/* Glassmorphism panel (no shadow) */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+}
+
+/* Premium mouse follower */
+.mouse-follower {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease;
+  will-change: transform;
+}
+
+.mouse-follower.hovering {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(6, 182, 212, 0.1);
+  border-color: var(--primary);
+}
+
+/* Physics Pills */
+.physics-pill {
+  padding: 8px 18px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-family: var(--font-space-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  box-shadow: none !important;
+}
+
+.physics-pill:active {
+  cursor: grabbing;
+}
+
+.physics-pill:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.physics-pill.accent {
+  border-color: rgba(6, 182, 212, 0.4);
+  color: var(--accent);
+}
+
+.physics-pill.accent:hover {
+  border-color: var(--accent);
+}
+
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
