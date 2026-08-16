@@ -6,31 +6,44 @@ import { ArrowDown, Volume2, VolumeX } from "lucide-react";
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [muted, setMuted] = useState(false);
+  const isInitialObserverCall = useRef(true);
+  const [muted, setMuted] = useState(true); // Start muted by default for guaranteed autoplay
 
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      // Set initial mute state
-      video.muted = muted;
-      
-      // Attempt to autoplay with audio
-      video.play().catch((error) => {
-        console.log("Autoplay with sound blocked, muting to autoplay:", error);
-        // Fallback: mute to allow autoplay
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          setMuted(true);
-          videoRef.current.play().catch((err) => {
-            console.error("Muted autoplay failed too:", err);
-          });
-        }
-      });
+      // Start video playing muted (guaranteed by browsers)
+      video.muted = true;
+      video.play()
+        .then(() => {
+          // Once playing, attempt to unmute
+          video.muted = false;
+          video.play()
+            .then(() => {
+              // Successfully unmuted
+              setMuted(false);
+            })
+            .catch((err) => {
+              console.log("Unmuted autoplay blocked by browser, keeping muted:", err);
+              if (videoRef.current) {
+                videoRef.current.muted = true;
+                setMuted(true);
+              }
+            });
+        })
+        .catch((error) => {
+          console.error("Autoplay failed:", error);
+        });
     }
 
     // Intersection observer to automatically mute when out of view and unmute when entering view
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (isInitialObserverCall.current) {
+          isInitialObserverCall.current = false;
+          return;
+        }
+
         if (videoRef.current) {
           if (!entry.isIntersecting) {
             videoRef.current.muted = true;
