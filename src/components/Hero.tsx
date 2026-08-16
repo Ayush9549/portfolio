@@ -7,23 +7,37 @@ import { ArrowDown, Volume2, VolumeX } from "lucide-react";
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isInitialObserverCall = useRef(true);
-  const [muted, setMuted] = useState(true); // Start muted by default
+  const [muted, setMuted] = useState(false); // Start unmuted by default
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // WHY: React's SSR output for <video> can omit the `muted` DOM attribute, which causes Chrome/Safari to block autoplay in production even though the `muted` prop looks correct in JSX — this is why dev (looser timing) can work while prod (stricter hydration timing) doesn't.
     const playVideo = () => {
       if (!video) return;
-      video.muted = true;
-      video.defaultMuted = true;
+      
+      // Attempt to play unmuted first
+      video.muted = false;
+      video.defaultMuted = false;
       video.play()
         .then(() => {
-          console.log("Autoplay started successfully (muted).");
+          console.log("Autoplay started successfully (unmuted).");
+          setMuted(false);
         })
         .catch((error) => {
-          console.warn("Autoplay play() failed/blocked:", error);
+          console.warn("Unmuted autoplay play() failed/blocked, falling back to muted:", error);
+          
+          // WHY: React's SSR output for <video> can omit the `muted` DOM attribute, which causes Chrome/Safari to block autoplay in production even though the `muted` prop looks correct in JSX — this is why dev (looser timing) can work while prod (stricter hydration timing) doesn't.
+          // Fallback: force muted playback to ensure autoplay succeeds
+          video.muted = true;
+          video.defaultMuted = true;
+          video.play()
+            .then(() => {
+              setMuted(true);
+            })
+            .catch((err) => {
+              console.error("Muted autoplay fallback failed:", err);
+            });
         });
     };
 
@@ -34,12 +48,14 @@ export default function Hero() {
       video.addEventListener("canplay", playVideo, { once: true });
     }
 
-    // First user interaction fallback to play the video if it is still paused
+    // First user interaction fallback to play/unmute the video if it is still paused or muted
     const handleFirstInteraction = () => {
-      if (video && video.paused) {
+      if (video) {
+        video.muted = false;
         video.play()
           .then(() => {
-            console.log("Video started after user interaction.");
+            console.log("Video playing unmuted after user interaction.");
+            setMuted(false);
           })
           .catch((err) => {
             console.warn("User interaction play() failed:", err);
