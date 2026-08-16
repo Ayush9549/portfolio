@@ -5,41 +5,56 @@ import { motion } from "framer-motion";
 import { ArrowDown, Volume2, VolumeX } from "lucide-react";
 
 export default function Hero() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const isInitialObserverCall = useRef(true);
-  const [muted, setMuted] = useState(true); // Start muted by default for guaranteed autoplay
+  const [muted, setMuted] = useState(true); // Start muted by default
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let attemptedUnmute = false;
-
-    const handlePlaying = () => {
-      if (attemptedUnmute) return;
-      attemptedUnmute = true;
-
-      // Attempt to unmute the video
-      video.muted = false;
+    // WHY: React's SSR output for <video> can omit the `muted` DOM attribute, which causes Chrome/Safari to block autoplay in production even though the `muted` prop looks correct in JSX — this is why dev (looser timing) can work while prod (stricter hydration timing) doesn't.
+    const playVideo = () => {
+      if (!video) return;
+      video.muted = true;
+      video.defaultMuted = true;
       video.play()
         .then(() => {
-          setMuted(false);
+          console.log("Autoplay started successfully (muted).");
         })
         .catch((error) => {
-          console.log("Unmuted autoplay blocked, staying muted:", error);
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            setMuted(true);
-          }
+          console.warn("Autoplay play() failed/blocked:", error);
         });
     };
 
-    video.addEventListener("playing", handlePlaying);
-
-    // If the video is already playing by the time useEffect runs
-    if (!video.paused) {
-      handlePlaying();
+    // Play if ready, otherwise wait for metadata to load (canplay)
+    if (video.readyState >= 2) {
+      playVideo();
+    } else {
+      video.addEventListener("canplay", playVideo, { once: true });
     }
+
+    // First user interaction fallback to play the video if it is still paused
+    const handleFirstInteraction = () => {
+      if (video && video.paused) {
+        video.play()
+          .then(() => {
+            console.log("Video started after user interaction.");
+          })
+          .catch((err) => {
+            console.warn("User interaction play() failed:", err);
+          });
+      }
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("touchstart", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
+    };
+
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("touchstart", handleFirstInteraction);
+    document.addEventListener("keydown", handleFirstInteraction);
+
+    // NOTE: Content-Type returned for mp4 in production is confirmed as video/mp4, and next.config.ts has no rewrites affecting assets.
 
     // Intersection observer to automatically mute when out of view and unmute when entering view
     const observer = new IntersectionObserver(
@@ -81,7 +96,10 @@ export default function Hero() {
     }
 
     return () => {
-      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("canplay", playVideo);
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("touchstart", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
       if (heroSection) {
         observer.unobserve(heroSection);
       }
