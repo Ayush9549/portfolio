@@ -30,9 +30,9 @@ export default function Navbar() {
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled
-          ? "py-5 bg-[#050816]/80 border-b border-white/[0.06] backdrop-blur-xl"
-          : "py-7 bg-transparent border-b border-transparent"
+        className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled || mobileOpen
+          ? "py-3 lg:py-5 bg-[#050816]/80 border-b border-white/[0.06] backdrop-blur-xl"
+          : "py-4 lg:py-7 bg-transparent border-b border-transparent"
           }`}
       >
         <div className="w-full max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center py-4" style={{paddingBlock: "10px"}}>
@@ -115,54 +115,54 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-      </motion.nav>
 
-      {/* Mobile Nav Drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed top-[60px] left-0 w-full z-[99] lg:hidden"
-          >
-            <div className="mx-4 rounded-2xl border border-white/[0.08] bg-[#050816]/95 backdrop-blur-xl overflow-hidden">
-              <div className="flex flex-col px-4 py-4 gap-1">
-                {navLinks.map((link, idx) => (
-                  <motion.a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setActiveLink(link.href);
-                    }}
-                    initial={{ x: -16, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: idx * 0.04, duration: 0.2 }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-mono text-xs uppercase tracking-widest text-secondary hover:text-white hover:bg-white/[0.05] transition-all duration-200 group"
-                  >
-                    <span className="w-1 h-1 rounded-full bg-accent/50 group-hover:bg-accent transition-colors" />
-                    {link.name}
-                  </motion.a>
-                ))}
+        {/* Mobile Nav Drawer */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute top-full left-0 w-full z-[99] lg:hidden pt-2"
+            >
+              <div className="mx-4 rounded-2xl border border-white/[0.08] bg-[#050816]/95 backdrop-blur-xl overflow-hidden">
+                <div className="flex flex-col px-4 py-4 gap-1">
+                  {navLinks.map((link, idx) => (
+                    <motion.a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        setActiveLink(link.href);
+                      }}
+                      initial={{ x: -16, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: idx * 0.04, duration: 0.2 }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-mono text-xs uppercase tracking-widest text-secondary hover:text-white hover:bg-white/[0.05] transition-all duration-200 group"
+                    >
+                      <span className="w-1 h-1 rounded-full bg-accent/50 group-hover:bg-accent transition-colors" />
+                      {link.name}
+                    </motion.a>
+                  ))}
 
-                {/* Mobile hire me */}
-                <div className="mt-2 pt-3 border-t border-white/[0.06]">
-                  <a
-                    href="#contact"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-accent/30 bg-accent/5 text-accent font-mono text-[10px] uppercase tracking-widest font-semibold hover:bg-accent/15 transition-all duration-200"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                    Hire Me
-                  </a>
+                  {/* Mobile hire me */}
+                  <div className="mt-2 pt-3 border-t border-white/[0.06]">
+                    <a
+                      href="#contact"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-accent/30 bg-accent/5 text-accent font-mono text-[10px] uppercase tracking-widest font-semibold hover:bg-accent/15 transition-all duration-200"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                      Hire Me
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
     </>
   );
 }

@@ -121,158 +121,175 @@ export default function FeaturedProjects() {
 
     if (!pinEl || !containerEl || !titleEl) return;
 
-    const vw = pinEl.clientWidth;
+    const mm = gsap.matchMedia();
 
-    // Immediately push container fully off-screen right before any animation
-    gsap.set(containerEl, { x: vw + 100, opacity: 1 });
+    // Responsive ScrollTrigger logic using gsap.matchMedia
+    mm.add("(min-width: 768px)", () => {
+      const vw = pinEl.clientWidth;
+      const cardWidth = 380;
+      const cardGap = 80;
+      const cardPadding = 60;
+      const cardHeight = 460;
 
-    // Calculate where the row ends: start at right edge, end so last card is visible
-    const totalRowWidth =
-      projects.length * (CARD_WIDTH + CARD_GAP) - CARD_GAP + CARD_PADDING * 2;
-    const endX = -(totalRowWidth - vw + 80);
+      // Set CSS variables for desktop horizontal scroll layout
+      pinEl.style.setProperty("--card-width", `${cardWidth}px`);
+      pinEl.style.setProperty("--card-gap", `${cardGap}px`);
+      pinEl.style.setProperty("--card-padding", `${cardPadding}px`);
+      pinEl.style.setProperty("--card-height", `${cardHeight}px`);
+      pinEl.style.setProperty("--container-left", "0px");
 
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: pinEl,
-        start: "top top",
-        end: "+=10000px",
-        scrub: 1.2,
-        pin: true,
-        anticipatePin: 1,
-      },
-    });
+      // Apply base rotations to card wrappers on desktop
+      const cardWrappers = containerEl.querySelectorAll(".project-card-tilt-wrapper");
+      cardWrappers.forEach((el, idx) => {
+        const rotate = projects[idx].rotate;
+        (el as HTMLElement).style.setProperty("--rotate-angle", `${rotate}deg`);
+      });
 
-    // Phase 1 (scroll 0→30%): title shrinks and glides to top-left
-    tl.to(
-      titleEl,
-      {
-        top: "64px",
-        left: "48px",
-        scale: 0.5,
-        transformOrigin: "top left",
-        duration: 1.5,
-        ease: "power2.out",
-      },
-      0
-    );
+      // Immediately push container fully off-screen right
+      gsap.set(containerEl, { x: vw + 50, opacity: 1 });
 
-    // Phase 2 (scroll 15%→100%): cards row slides right→left
-    tl.fromTo(
-      containerEl,
-      { x: vw + 100 },
-      { x: endX, duration: 2.8, ease: "power2.out" },
-      0.2
-    );
+      const totalRowWidth =
+        projects.length * (cardWidth + cardGap) - cardGap + cardPadding * 2;
+      const endX = -(totalRowWidth - vw + 80);
 
-    // Dynamic rotation tilt tweens (scroll-bound staggered wave)
-    const cardWrappers = containerEl.querySelectorAll(".project-card-tilt-wrapper");
-    if (cardWrappers.length > 0) {
-      // 1. Tilt Left
-      tl.to(
-        cardWrappers,
-        {
-          rotation: (idx) => projects[idx].rotate - 12,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "sine.inOut",
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: pinEl,
+          start: "top top",
+          end: "+=10000px",
+          scrub: 1.2,
+          pin: true,
+          anticipatePin: 1,
         },
+      });
+
+      // Phase 1: title shrinks and glides to top-left
+      tl.to(
+        titleEl,
+        {
+          top: "64px",
+          left: "48px",
+          scale: 0.5,
+          transformOrigin: "top left",
+          duration: 1.5,
+          ease: "power2.out",
+        },
+        0
+      );
+
+      // Phase 2: cards row slides right→left
+      tl.fromTo(
+        containerEl,
+        { x: vw + 50 },
+        { x: endX, duration: 2.8, ease: "power2.out" },
         0.2
       );
 
-      // 2. Tilt Right
-      tl.to(
-        cardWrappers,
-        {
-          rotation: (idx) => projects[idx].rotate + 12,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "sine.inOut",
-        },
-        0.8
-      );
+      // Dynamic rotation tilt tweens (staggered wave)
+      if (cardWrappers.length > 0) {
+        tl.to(
+          cardWrappers,
+          {
+            rotation: (idx) => projects[idx].rotate - 12,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "sine.inOut",
+          },
+          0.2
+        );
 
-      // 3. Tilt Left
-      tl.to(
-        cardWrappers,
-        {
-          rotation: (idx) => projects[idx].rotate - 12,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "sine.inOut",
-        },
-        1.4
-      );
+        tl.to(
+          cardWrappers,
+          {
+            rotation: (idx) => projects[idx].rotate + 12,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "sine.inOut",
+          },
+          0.8
+        );
 
-      // 4. Tilt Right
-      tl.to(
-        cardWrappers,
-        {
-          rotation: (idx) => projects[idx].rotate + 12,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "sine.inOut",
-        },
-        2.0
-      );
+        tl.to(
+          cardWrappers,
+          {
+            rotation: (idx) => projects[idx].rotate - 12,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "sine.inOut",
+          },
+          1.4
+        );
 
-      // 5. Back to base rotation
-      tl.to(
-        cardWrappers,
-        {
-          rotation: (idx) => projects[idx].rotate,
-          duration: 0.4,
-          stagger: 0.08,
-          ease: "sine.inOut",
-        },
-        2.6
-      );
-    }
+        tl.to(
+          cardWrappers,
+          {
+            rotation: (idx) => projects[idx].rotate + 12,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "sine.inOut",
+          },
+          2.0
+        );
+
+        tl.to(
+          cardWrappers,
+          {
+            rotation: (idx) => projects[idx].rotate,
+            duration: 0.4,
+            stagger: 0.08,
+            ease: "sine.inOut",
+          },
+          2.6
+        );
+      }
+    });
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => {
-        if (t.trigger === pinEl) t.kill();
-      });
+      mm.revert();
     };
   }, []);
 
   return (
     <div
       ref={pinRef}
-      className="relative w-full h-screen bg-[#050816] overflow-hidden border-b border-line"
+      className="relative w-full h-auto md:h-screen bg-[#050816] overflow-visible md:overflow-hidden border-b border-line py-16 md:py-0"
+      style={{
+        ["--card-width" as any]: "100%",
+        ["--card-height" as any]: "auto",
+        ["--card-gap" as any]: "24px",
+        ["--card-padding" as any]: "16px",
+        ["--rotate-angle" as any]: "0deg",
+        ["--container-left" as any]: "auto",
+      }}
     >
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[160px] pointer-events-none" />
 
-      {/* Title — centered by CSS, GSAP moves it to top-left on scroll */}
+      {/* Title */}
       <div
         ref={titleRef}
-        className="absolute z-20 pointer-events-none flex flex-col items-center gap-2"
-        style={{
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-        }}
+        className="relative md:absolute z-20 pointer-events-none flex flex-col items-center gap-2 mb-12 md:mb-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
       >
         <span className="font-mono text-xs uppercase tracking-widest text-accent font-semibold">
           Selected works
         </span>
-        <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight uppercase text-center whitespace-nowrap">
+        <h2 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight uppercase text-center sm:whitespace-nowrap">
           Featured Projects
         </h2>
-        <span className="font-mono text-[10px] text-secondary tracking-widest uppercase mt-2 animate-pulse">
+        <span className="font-mono text-[10px] text-secondary tracking-widest uppercase mt-2 animate-pulse md:block hidden">
           Scroll down to stack cards
         </span>
       </div>
 
-      {/* Cards row — starts off-screen right, slides left on scroll */}
+      {/* Cards row */}
       <div
         ref={containerRef}
-        className="absolute top-1/2 -translate-y-1/2 flex items-center pointer-events-none"
+        className="relative md:absolute top-auto md:top-1/2 md:-translate-y-1/2 flex flex-row items-center pointer-events-auto md:pointer-events-none w-full md:w-auto overflow-x-auto md:overflow-visible scrollbar-none snap-x snap-mandatory py-4"
         style={{
-          left: "0px",
-          gap: CARD_GAP + "px",
-          paddingLeft: CARD_PADDING + "px",
-          paddingRight: CARD_PADDING + "px",
+          left: "var(--container-left, auto)",
+          gap: "var(--card-gap, 20px)",
+          paddingLeft: "var(--card-padding, 20px)",
+          paddingRight: "var(--card-padding, 20px)",
         }}
       >
         {projects.map((proj, idx) => {
@@ -282,11 +299,11 @@ export default function FeaturedProjects() {
           return (
             <div
               key={proj.id}
-              className="project-card-tilt-wrapper flex-shrink-0 pointer-events-auto"
+              className="project-card-tilt-wrapper flex-shrink-0 pointer-events-auto w-[290px] md:w-[var(--card-width,380px)] snap-center"
               style={{
-                width: CARD_WIDTH + "px",
-                height: "460px",
-                transform: `rotate(${proj.rotate}deg)`,
+                width: "var(--card-width, 290px)",
+                height: "var(--card-height, 420px)",
+                transform: "rotate(var(--rotate-angle, 0deg))",
                 transformOrigin: "center center",
               }}
             >
